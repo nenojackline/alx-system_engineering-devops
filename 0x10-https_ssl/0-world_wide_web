@@ -1,18 +1,21 @@
 #!/usr/bin/env bash
-# write a Bash script that will display information about the subdomains
+# Displays a domain A record details. Accepts two arguments:
+# 1. Domain - string; domain name to audit; mandatory
+# 2. Subdomain - string; specific subdomain to audit; optional
 
-dns_config () {
-    script=$(dig "$2"."$1" | grep -A1 'ANSWER SECTION:' | tr '\t' '\n' | tail -2 | tr '\n' ' ')
-    echo "$2 $script" | awk '{print "The subdomain " $1 " is a " $2 " record and points to " $3}'
+a_record_details()
+{
+	if [ "$#" -eq 2 ]
+	then
+		dig "$2"."$1" | grep -A1 'ANSWER SECTION:' | tail -1 | awk '{print "The subdomain '"$2"' is a " $4 " record and points to " $5}'
+	elif [ "$#" -eq 1 ]
+	then
+		subdomains=("www" "lb-01" "web-01" "web-02")
+
+		for sub in "${subdomains[@]}"; do
+			dig "$sub"."$1" | grep -A1 'ANSWER SECTION:' | tail -1 | awk '{print "The subdomain '"$sub"' is a " $4 " record and points to " $5}'
+		done
+	fi
 }
 
-if [ "$#" == 1 ]
-then
-  dns_config "$1" "www"
-  dns_config "$1" "lb-01"
-  dns_config "$1" "web-01"
-  dns_config "$1" "web-02"
-elif [ "$#" == 2 ]
-then
-  dns_config "$1" "$2"
-fi
+a_record_details $1 $2
